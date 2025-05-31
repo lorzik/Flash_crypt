@@ -40,7 +40,7 @@ class USBEncryptorPro:
         self.load_or_generate_keys()
     
     def load_or_generate_keys(self):
-        """Загружает или генерирует ключи на подключенной флешке"""
+        #Загружает или генерирует ключи на подключенной флешке
         usb_drives = self.get_usb_drives()
         key_found = False
         
@@ -101,7 +101,7 @@ class USBEncryptorPro:
                 self.public_key = None
     
     def check_keys_available(self):
-        """Проверяет доступность ключей на флешке"""
+        #Проверяет доступность ключей на флешке
         if not self.private_key or not self.public_key:
             usb_drives = self.get_usb_drives()
             for drive in usb_drives:
@@ -113,7 +113,7 @@ class USBEncryptorPro:
         return True
     
     def sign_file(self, file_path):
-        """Подписывает файл с использованием ключа с флешки"""
+        #Подписывает файл с использованием ключа с флешки
         if not self.check_keys_available():
             messagebox.showerror("Ошибка", "Не найден ключ для подписи на подключенных флешках!")
             return False
@@ -143,7 +143,7 @@ class USBEncryptorPro:
             return False
     
     def verify_signature(self, file_path, signature_path):
-        """Проверяет подпись с использованием ключа с флешки"""
+        #Проверяет подпись с использованием ключа с флешки
         if not self.check_keys_available():
             messagebox.showerror("Ошибка", "Не найден ключ для проверки на подключенных флешках!")
             return False
