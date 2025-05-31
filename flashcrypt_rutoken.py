@@ -15,16 +15,13 @@ class RutokenManager:
         self.session = None
         
     def connect(self, pin=None):
-        """Подключение к токену с запросом PIN-кода через GUI"""
         try:
-            # Если сессия уже открыта, сначала закроем ее
             if self.session:
                 self.disconnect()
                 
-            # Запрашиваем PIN-код, если он не передан
             if pin is None:
                 pin = self.request_pin()
-                if pin is None:  # Пользователь отменил ввод
+                if pin is None:
                     return False
             
             slots = self.pkcs11.getSlotList()
@@ -39,19 +36,17 @@ class RutokenManager:
             return False
             
     def disconnect(self):
-        """Закрытие сессии с токеном"""
         try:
             if self.session:
                 self.session.logout()
                 self.session.closeSession()
                 self.session = None
         except Exception:
-            pass  # Игнорируем ошибки при закрытии сессии
+            pass  
 
     def request_pin(self):
-        """Отображает диалоговое окно для ввода PIN-кода токена"""
         root = tk.Tk()
-        root.withdraw()  # Скрываем основное окно
+        root.withdraw()  
         pin = simpledialog.askstring(
             "PIN-код токена", 
             "Введите PIN-код для доступа к USB-токену:",
@@ -62,7 +57,6 @@ class RutokenManager:
     
     def find_gost_keys(self):
         try:
-            # Ищем закрытый ключ ГОСТ
             priv_key = self.session.findObjects([
                 (CKA_CLASS, CKO_PRIVATE_KEY),
                 (CKA_KEY_TYPE, CKK_GOSTR3410)
@@ -71,7 +65,6 @@ class RutokenManager:
             if not priv_key:
                 raise Exception("На токене не найден закрытый ключ ГОСТ")
             
-            # Ищем сертификат
             certs = self.session.findObjects([
                 (CKA_CLASS, CKO_CERTIFICATE)
             ])
@@ -90,10 +83,8 @@ class RutokenManager:
             if not priv_key:
                 return None
                 
-            # Хеширование по ГОСТ
             digest = self.session.digest(data, Mechanism(CKM_GOSTR3411, None))
             
-            # Подпись по ГОСТ
             signature = self.session.sign(priv_key, digest, Mechanism(CKM_GOSTR3410, None))
             
             return bytes(signature)
@@ -176,25 +167,19 @@ class USBEncryptorPro:
         self.protection_status.pack(pady=5)
     
     def sign_file(self, file_path):
-        """Подписание файла через Рутокен с запросом PIN-кода"""
         try:
-            # Запрашиваем подключение (вызовет диалог ввода PIN)
             if not self.rutoken.connect():
                 return False
             
             with open(file_path, "rb") as f:
                 data = f.read()
             
-            # Создаем подпись по ГОСТ
             signature = self.rutoken.gost_sign(data)
-            
-            # Закрываем сессию после операции
             self.rutoken.disconnect()
             
             if not signature:
                 return False
             
-            # Сохраняем подпись в файл
             signature_path = file_path + ".sig"
             with open(signature_path, "wb") as f:
                 f.write(signature)
@@ -208,27 +193,22 @@ class USBEncryptorPro:
     
     def verify_gost_signature(self, file_path, signature_path):
         try:
-            # Запрашиваем подключение (вызовет диалог ввода PIN)
             if not self.rutoken.connect():
                 return False
 
-            # Получаем публичный ключ с токена
             _, cert = self.rutoken.find_gost_keys()
             if not cert:
                 self.rutoken.disconnect()
                 return False
             
-            # Загружаем данные
             with open(file_path, "rb") as f:
                 data = f.read()
             
             with open(signature_path, "rb") as f:
                 signature = f.read()
         
-            # Хешируем данные через токен
             digest = self.rutoken.session.digest(data, Mechanism(CKM_GOSTR3411, None))
         
-            # Проверяем подпись
             pub_key = self.rutoken.session.findObjects([(CKA_CLASS, CKO_PUBLIC_KEY)])[0]
             result = self.rutoken.session.verify(
                 pub_key,
@@ -237,7 +217,6 @@ class USBEncryptorPro:
                 Mechanism(CKM_GOSTR3410, None)
             )
             
-            # Закрываем сессию после операции
             self.rutoken.disconnect()
         
             return bool(result)
@@ -468,7 +447,6 @@ class USBEncryptorPro:
         self.stop_button.config(state='disabled')
         self.protection_status.config(text="ЗАЩИТА НЕ АКТИВНА", fg='red')
         self.log("Система защиты остановлена")
-    
     def run(self):
         try:
             self.root.protocol("WM_DELETE_WINDOW", self.on_close)
@@ -480,7 +458,7 @@ class USBEncryptorPro:
         if messagebox.askokcancel("Выход", "Вы уверены, что хотите выйти?\nФайлы останутся в текущем состоянии защиты."):
             self.stop_monitoring()
             self.root.destroy()
-
+            
 if __name__ == "__main__":
     app = USBEncryptorPro()
     app.run()
