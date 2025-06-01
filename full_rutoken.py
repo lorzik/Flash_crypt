@@ -137,7 +137,7 @@ class RutokenManager:
 class RutokenEncryptor:
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("Rutoken File Protector")
+        self.root.title("Лучшая программа в мире")
         self.root.geometry("700x550")
         self.rutoken = RutokenManager()
 
@@ -152,7 +152,7 @@ class RutokenEncryptor:
         self.create_widgets()
         
     def create_widgets(self):
-        header = tk.Label(self.root, text="Rutoken File Protector", 
+        header = tk.Label(self.root, text="Мама точно не узнает", 
                          font=('Arial', 16, 'bold'), bg='#f0f0f0') 
         header.pack(pady=10)
         
